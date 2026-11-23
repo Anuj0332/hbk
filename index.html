@@ -15,7 +15,6 @@
     }
 
     html {
-      scroll-behavior: smooth;
       background-color: #0b0206;
       overflow-x: clip;
     }
@@ -105,7 +104,7 @@
       padding: 4px 12px;
     }
 
-    /* Great Vibes Gradient Text (no heavy CSS filter blur) */
+    /* Great Vibes Gradient Text */
     .script-gradient {
       font-family: "Great Vibes", "Brush Script MT", cursive;
       font-style: italic;
@@ -187,7 +186,7 @@
       --tilt: 2.2deg;
     }
 
-    /* Lightweight Radial Glow Sibling (Zero box-shadow blur cost) */
+    /* Lightweight Radial Glow Sibling */
     .card-glow {
       position: absolute;
       inset: -22px;
@@ -210,7 +209,7 @@
         opacity 0.44s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    /* Single Static Texture Layer per Card (scales down when inactive, 1:1 when active) */
+    /* Single Static Texture Layer per Card */
     .card-inner {
       position: relative;
       z-index: 1;
@@ -227,7 +226,7 @@
         opacity 0.44s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    /* Pure Radial-Gradient Vignette (No inset box-shadow overdraw) */
+    /* Pure Radial-Gradient Vignette */
     .card-inner::after {
       content: "";
       position: absolute;
@@ -445,7 +444,7 @@
     </div>
 
     <!-- Small Circular Upward Arrow -->
-    <a href="#top" class="top-circle-btn" aria-label="Back to Top">
+    <a href="#top" class="top-circle-btn" id="backToTopBtn" aria-label="Back to Top">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.2"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -557,7 +556,6 @@
       let closestDistance = Infinity;
       let activeDistance = Infinity;
 
-      // Batch all DOM reads first
       for (let i = 0; i < cards.length; i++) {
         const rect = cards[i].getBoundingClientRect();
         const distance = Math.abs(rect.top + rect.height * 0.5 - viewportCenter);
@@ -584,7 +582,6 @@
         }
       }
 
-      // Batch DOM writes after reads
       if (nextActive !== activeCard) {
         if (activeCard) activeCard.classList.remove("is-active");
         if (nextActive) nextActive.classList.add("is-active");
@@ -604,6 +601,131 @@
     window.addEventListener("pageshow", updateCenterPhoto);
     window.addEventListener("load", updateCenterPhoto);
     updateCenterPhoto();
+
+    // Smooth Low-Speed Auto-Scroll Loop (Down -> Bottom Pause -> Smooth Return to Top -> Repeat)
+    const SCROLL_SPEED_PX_PER_SEC = 42; // Low, gentle reading speed
+    const BOTTOM_PAUSE_MS = 1400;
+    const TOP_PAUSE_MS = 700;
+    const RETURN_DURATION_MS = 1000;
+    const USER_IDLE_RESUME_MS = 1800;
+
+    let virtualY = window.scrollY || 0;
+    let lastFrameTime = null;
+    let mode = "top-pause"; // "scrolling" | "bottom-pause" | "returning" | "top-pause" | "user-paused"
+    let modeStartTime = performance.now();
+    let returnStartY = 0;
+    let resumeTimer = null;
+    let isTouching = false;
+
+    function getMaxScroll() {
+      const docHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight
+      );
+      const viewHeight = window.innerHeight || document.documentElement.clientHeight;
+      return Math.max(0, docHeight - viewHeight);
+    }
+
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function pauseForUserInteraction() {
+      mode = "user-paused";
+      clearTimeout(resumeTimer);
+      if (!isTouching) {
+        resumeTimer = setTimeout(() => {
+          virtualY = window.scrollY || 0;
+          lastFrameTime = null;
+          mode = "scrolling";
+        }, USER_IDLE_RESUME_MS);
+      }
+    }
+
+    window.addEventListener("touchstart", () => {
+      isTouching = true;
+      pauseForUserInteraction();
+    }, { passive: true });
+
+    window.addEventListener("touchend", () => {
+      isTouching = false;
+      pauseForUserInteraction();
+    }, { passive: true });
+
+    window.addEventListener("touchcancel", () => {
+      isTouching = false;
+      pauseForUserInteraction();
+    }, { passive: true });
+
+    window.addEventListener("wheel", pauseForUserInteraction, { passive: true });
+
+    document.getElementById("backToTopBtn").addEventListener("click", (e) => {
+      e.preventDefault();
+      clearTimeout(resumeTimer);
+      isTouching = false;
+      returnStartY = window.scrollY || 0;
+      mode = "returning";
+      modeStartTime = performance.now();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        lastFrameTime = null;
+        virtualY = window.scrollY || 0;
+      }
+    });
+
+    function autoScrollLoop(now) {
+      if (lastFrameTime === null) {
+        lastFrameTime = now;
+      }
+      const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+      lastFrameTime = now;
+
+      if (!document.hidden && mode !== "user-paused") {
+        const maxScroll = getMaxScroll();
+
+        if (mode === "top-pause") {
+          if (now - modeStartTime >= TOP_PAUSE_MS) {
+            virtualY = window.scrollY || 0;
+            mode = "scrolling";
+          }
+        } else if (mode === "scrolling") {
+          virtualY += SCROLL_SPEED_PX_PER_SEC * dt;
+
+          if (virtualY >= maxScroll) {
+            virtualY = maxScroll;
+            window.scrollTo(0, maxScroll);
+            mode = "bottom-pause";
+            modeStartTime = now;
+          } else {
+            window.scrollTo(0, virtualY);
+          }
+        } else if (mode === "bottom-pause") {
+          if (now - modeStartTime >= BOTTOM_PAUSE_MS) {
+            returnStartY = window.scrollY || maxScroll;
+            mode = "returning";
+            modeStartTime = now;
+          }
+        } else if (mode === "returning") {
+          const progress = Math.min(1, (now - modeStartTime) / RETURN_DURATION_MS);
+          const eased = easeInOutCubic(progress);
+          virtualY = returnStartY * (1 - eased);
+          window.scrollTo(0, virtualY);
+
+          if (progress >= 1) {
+            virtualY = 0;
+            window.scrollTo(0, 0);
+            mode = "top-pause";
+            modeStartTime = now;
+          }
+        }
+      }
+
+      requestAnimationFrame(autoScrollLoop);
+    }
+
+    requestAnimationFrame(autoScrollLoop);
   </script>
 
 </body>
