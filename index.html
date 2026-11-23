@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Birthday Khushi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100dvh;
+      /* 45-degree: bottom-left black to top-right dark pink */
+      background: linear-gradient(45deg, #000000, #4f1833);
+      background-repeat: no-repeat;
+      color: #d1d5db;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      position: relative;
+    }
+
+    /* Isolated GPU-Composited Floating Hearts Layer */
+    .hearts-layer {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+      contain: layout style paint;
+      transform: translateZ(0);
+    }
+
+    .heart-wrap {
+      position: absolute;
+      bottom: -70px;
+      will-change: transform, opacity;
+      animation: floatUp linear infinite;
+    }
+
+    .heart-svg {
+      display: block;
+      will-change: transform;
+      animation: bobbleSway ease-in-out infinite alternate;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translate3d(0, 0, 0) scale(0.85);
+        opacity: 0;
+      }
+      12% {
+        opacity: var(--max-opacity, 0.78);
+      }
+      85% {
+        opacity: var(--max-opacity, 0.78);
+      }
+      100% {
+        transform: translate3d(0, calc(-100dvh - 110px), 0) scale(1.1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes bobbleSway {
+      0% {
+        transform: translate3d(calc(var(--sway, 16px) * -1), 0, 0) rotate(-8deg) scale(0.95);
+      }
+      50% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1.04);
+      }
+      100% {
+        transform: translate3d(var(--sway, 16px), 0, 0) rotate(8deg) scale(0.97);
+      }
+    }
+
+    /* Barless Top Title Area */
+    .hero-title {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 36px 16px 18px;
+      contain: layout style;
+    }
+
+    .hero-title h1 {
+      display: inline-block;
+      padding: 4px 12px;
+    }
+
+    /* Shared Great Vibes Style + Subtle 45deg Dark Pink to #f5c2dc Gradient */
+    .script-gradient {
+      font-family: "Great Vibes", "Brush Script MT", cursive;
+      font-style: italic;
+      font-weight: 400;
+      background: linear-gradient(45deg, #9c2961 0%, #f5c2dc 45%, #f5c2dc 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 2px 10px rgba(244, 114, 182, 0.25));
+    }
+
+    /* 1.5x Darker & Smaller Variant for Pop-Up Congratulations Text */
+    .script-gradient-darker {
+      font-family: "Great Vibes", "Brush Script MT", cursive;
+      font-style: italic;
+      font-weight: 400;
+      background: linear-gradient(45deg, #681b41 0%, #a87490 45%, #a87490 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 2px 8px rgba(168, 116, 144, 0.22));
+    }
+
+    .hero-title .line-top {
+      display: block;
+      font-size: clamp(2.2rem, 9vw, 3rem);
+      line-height: 1.2;
+      padding: 0 6px;
+    }
+
+    .hero-title .line-name {
+      display: block;
+      font-size: clamp(2.8rem, 11.5vw, 3.8rem);
+      line-height: 1.15;
+      margin-top: 2px;
+      padding: 0 6px;
+    }
+
+    /* Closing Script Text Before Upward Arrow Button */
+    .closing-wrap {
+      text-align: center;
+      padding: 8px 8px 0;
+      contain: layout style;
+    }
+
+    .closing-text {
+      display: inline-block;
+      font-size: clamp(2.2rem, 9vw, 3rem);
+      line-height: 1.2;
+      padding: 0 8px;
+    }
+
+    /* Main Mobile Container */
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    /* Smaller Borderless Photo Section Wrapper */
+    .card {
+      position: relative;
+      width: 78%;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    /* Extra breathing room under the last photo for the pop-up wish text */
+    .card-last {
+      margin-bottom: 24px;
+    }
+
+    /* Alternating subtle tilt directions */
+    .card:nth-child(odd) {
+      --tilt: -2.2deg;
+    }
+
+    .card:nth-child(even) {
+      --tilt: 2.2deg;
+    }
+
+    /* Pre-rendered Pop-Out Shadow Layer (animated via opacity + transform only for 60fps) */
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate3d(0, 0, 0) scale(0.94) rotate(0deg);
+      box-shadow:
+        0 28px 50px -6px rgba(0, 0, 0, 0.96),
+        0 14px 24px -4px rgba(0, 0, 0, 0.86),
+        0 0 32px rgba(196, 56, 124, 0.36);
+      will-change: transform, opacity;
+      transition:
+        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.4s ease;
+    }
+
+    .card.is-active::before {
+      opacity: 1;
+      transform: translate3d(0, -10px, 0) scale(1.06) rotate(var(--tilt, -2.2deg));
+    }
+
+    /* Smooth Black Border & Corner Vignette Overlay (locked to photo transform for 60fps) */
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      border-radius: 18px;
+      pointer-events: none;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(0, 0, 0, 0) 48%,
+        rgba(0, 0, 0, 0.32) 76%,
+        rgba(0, 0, 0, 0.8) 100%
+      );
+      box-shadow: inset 0 0 26px 6px rgba(0, 0, 0, 0.72);
+      opacity: 0.84;
+      transform: translate3d(0, 0, 0) scale(0.94) rotate(0deg);
+      will-change: transform, opacity;
+      transition:
+        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.4s ease;
+    }
+
+    .card.is-active::after {
+      opacity: 1;
+      transform: translate3d(0, -10px, 0) scale(1.06) rotate(var(--tilt, -2.2deg));
+    }
+
+    /* Vertical Portrait Photo (static resting shadow + transform/opacity transitions only) */
+    .section-photo {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      object-position: center 22%;
+      border-radius: 18px;
+      border: none;
+      background: linear-gradient(145deg, #2a0a1a, #12040b);
+      opacity: 0.84;
+      transform: translate3d(0, 0, 0) scale(0.94) rotate(0deg);
+      box-shadow:
+        0 14px 26px -6px rgba(0, 0, 0, 0.85),
+        0 6px 12px -4px rgba(0, 0, 0, 0.72),
+        0 0 14px rgba(156, 41, 97, 0.16);
+      will-change: transform, opacity;
+      transition:
+        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.4s ease;
+    }
+
+    /* Pop-Notification & Pop-Out Tilt When Photo Hits Center of Screen */
+    .card.is-active .section-photo {
+      opacity: 1;
+      transform: translate3d(0, -10px, 0) scale(1.06) rotate(var(--tilt, -2.2deg));
+    }
+
+    /* Smaller, 1.5x Darker Pop-Up Text Near Last Photo (disappears when last photo leaves) */
+    .pop-wish {
+      position: absolute;
+      left: -12%;
+      right: -12%;
+      top: calc(100% + 14px);
+      z-index: 3;
+      text-align: center;
+      pointer-events: none;
+      font-size: clamp(1.25rem, 4.8vw, 1.55rem);
+      line-height: 1.25;
+      padding: 0 8px;
+      opacity: 0;
+      transform: translate3d(0, 12px, 0) scale(0.86);
+      will-change: transform, opacity;
+      transition:
+        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.32s ease;
+    }
+
+    .card-last.is-active .pop-wish {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    /* Small Circular Upward Arrow Button */
+    .top-circle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      margin: -16px auto 0;
+      border-radius: 50%;
+      background: rgba(12, 4, 8, 0.88);
+      border: 1px solid rgba(245, 194, 220, 0.28);
+      color: #f5c2dc;
+      text-decoration: none;
+      box-shadow:
+        0 10px 22px rgba(0, 0, 0, 0.75),
+        0 0 14px rgba(156, 41, 97, 0.25);
+      transition: transform 0.2s ease, background-color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .top-circle-btn:active {
+      transform: scale(0.92);
+      background: rgba(79, 24, 51, 0.85);
+    }
+
+    /* Small Normal Pink Footer Signature + Realistic Pumping Heart */
+    .footer-note {
+      text-align: center;
+      padding: 0 12px 28px;
+      margin-top: -16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 400;
+      line-height: 1.7;
+      color: #f48fb1;
+      letter-spacing: 0.2px;
+      contain: layout style;
+    }
+
+    .footer-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    /* Anatomical Pumping Heart (60fps GPU-composited lub-dub pulse) */
+    .real-heart {
+      display: inline-block;
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      will-change: transform;
+      transform-origin: center center;
+      animation: realHeartPump 1.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+      filter: drop-shadow(0 2px 6px rgba(190, 24, 93, 0.45));
+    }
+
+    @keyframes realHeartPump {
+      0%   { transform: translate3d(0, 0, 0) scale(1); }
+      14%  { transform: translate3d(0, 0, 0) scale(1.22); }
+      26%  { transform: translate3d(0, 0, 0) scale(1.03); }
+      38%  { transform: translate3d(0, 0, 0) scale(1.16); }
+      65%  { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(0, 0, 0) scale(1); }
+    }
+  </style>
+</head>
+<body id="top">
+
+  <!-- Shared SVG Gradients for 3D Dark Pink Hearts -->
+  <svg width="0" height="0" style="position:absolute; visibility:hidden;" aria-hidden="true">
+    <defs>
+      <radialGradient id="heartGrad0" cx="35%" cy="28%" r="72%" fx="30%" fy="24%">
+        <stop offset="0%" stop-color="#8c2456" />
+        <stop offset="50%" stop-color="#591637" />
+        <stop offset="100%" stop-color="#360c21" />
+      </radialGradient>
+
+      <radialGradient id="heartGrad1" cx="32%" cy="26%" r="74%" fx="28%" fy="22%">
+        <stop offset="0%" stop-color="#7a1e4b" />
+        <stop offset="52%" stop-color="#4d1330" />
+        <stop offset="100%" stop-color="#2e0a1c" />
+      </radialGradient>
+
+      <radialGradient id="heartGrad2" cx="38%" cy="30%" r="70%" fx="34%" fy="25%">
+        <stop offset="0%" stop-color="#9c2961" />
+        <stop offset="48%" stop-color="#63193d" />
+        <stop offset="100%" stop-color="#3b0e24" />
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <!-- Background Flying Hearts -->
+  <div class="hearts-layer" id="heartsLayer" aria-hidden="true"></div>
+
+  <!-- Great Vibes Subtle Gradient Title -->
+  <div class="hero-title">
+    <h1>
+      <span class="line-top script-gradient">Happy Birthday</span>
+      <span class="line-name script-gradient">Khushi</span>
+    </h1>
+  </div>
+
+  <main class="container">
+    <section class="card">
+      <img src="photo1.jpg" alt="Khushi 1" class="section-photo" decoding="async" />
+    </section>
+
+    <section class="card">
+      <img src="photo2.jpg" alt="Khushi 2" class="section-photo" decoding="async" />
+    </section>
+
+    <section class="card">
+      <img src="photo3.jpg" alt="Khushi 3" class="section-photo" decoding="async" />
+    </section>
+
+    <section class="card">
+      <img src="photo4.jpg" alt="Khushi 4" class="section-photo" decoding="async" />
+    </section>
+
+    <section class="card card-last">
+      <img src="photo5.jpg" alt="Khushi 5" class="section-photo" decoding="async" />
+      <p class="pop-wish script-gradient-darker">Congratulations ! You Turned to 18 Years Today.</p>
+    </section>
+
+    <div class="closing-wrap">
+      <p class="closing-text script-gradient">I love you !</p>
+    </div>
+
+    <!-- Small Circular Upward Arrow -->
+    <a href="#top" class="top-circle-btn" aria-label="Back to Top">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 19V5" />
+        <path d="M5 12l7-7 7 7" />
+      </svg>
+    </a>
+
+    <!-- Small Normal Pink Bottom Text + Realistic Pumping Anatomical Heart -->
+    <footer class="footer-note">
+      <p class="footer-line">
+        <span>A Little Gift From Anuj !</span>
+        <svg class="real-heart" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <radialGradient id="anatMuscle" cx="42%" cy="48%" r="58%">
+              <stop offset="0%" stop-color="#d63864" />
+              <stop offset="48%" stop-color="#8f173c" />
+              <stop offset="85%" stop-color="#4d0920" />
+              <stop offset="100%" stop-color="#2b0310" />
+            </radialGradient>
+            <linearGradient id="anatAorta" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#c93b63" />
+              <stop offset="100%" stop-color="#610c27" />
+            </linearGradient>
+            <linearGradient id="anatVena" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7c2853" />
+              <stop offset="100%" stop-color="#360921" />
+            </linearGradient>
+          </defs>
+          <!-- Superior Vena Cava -->
+          <path d="M18 10 C18 16, 19 22, 21 26 L27 25 C25 20, 25 14, 25 9 Z" fill="url(#anatVena)" />
+          <!-- Aortic Arch & Branches -->
+          <path d="M27 25 C27 14, 34 9, 41 12 C45 14, 46 19, 43 24 L37 25 C39 21, 38 17, 35 17 C33 17, 32 21, 32 26 Z" fill="url(#anatAorta)" />
+          <path d="M31 12 L31 6 M36 10 L37 5 M40 12 L43 7" stroke="#a6244b" stroke-width="2.4" stroke-linecap="round" />
+          <!-- Pulmonary Trunk -->
+          <path d="M29 29 C34 22, 43 20, 50 22 L49 27 C43 26, 37 27, 33 32 Z" fill="url(#anatVena)" />
+          <!-- Main Ventricular & Atrial Muscular Body -->
+          <path d="M21 24 C14 27, 13 36, 17 43 C21 51, 30 57, 39 58 C44 59, 47 56, 48 51 C51 43, 50 32, 43 27 C37 23, 27 22, 21 24 Z" fill="url(#anatMuscle)" />
+          <!-- Right Auricle Flap -->
+          <path d="M18 26 C15 29, 15 35, 19 37 C22 38, 25 34, 24 29 Z" fill="#6b0e2c" opacity="0.85" />
+          <!-- Coronary Vessels -->
+          <path d="M32 28 C32 35, 34 42, 39 51 M33 36 C28 39, 25 43, 24 47 M35 41 C40 42, 44 45, 46 49"
+                fill="none" stroke="#3b0416" stroke-width="1.4" stroke-linecap="round" opacity="0.75" />
+          <path d="M31.5 29 C31.5 35, 33.5 42, 38.5 50.5"
+                fill="none" stroke="rgba(255, 180, 205, 0.35)" stroke-width="0.7" stroke-linecap="round" />
+          <!-- Tissue Specular Highlight -->
+          <path d="M22 33 C20 37, 22 43, 26 47" fill="none" stroke="rgba(255, 200, 220, 0.28)" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    // Batch-insert 14 GPU-composited 3D dark pink hearts
+    const heartsLayer = document.getElementById("heartsLayer");
+    const heartFragment = document.createDocumentFragment();
+    const heartCount = 14;
+
+    for (let i = 0; i < heartCount; i++) {
+      const wrap = document.createElement("div");
+      wrap.className = "heart-wrap";
+
+      const size = 18 + Math.random() * 26;
+      const left = Math.random() * 94;
+      const floatDuration = 8 + Math.random() * 9;
+      const swayDuration = 2.4 + Math.random() * 2.2;
+      const delay = -(Math.random() * floatDuration);
+      const sway = (10 + Math.random() * 18).toFixed(1) + "px";
+      const maxOpacity = (0.55 + Math.random() * 0.35).toFixed(2);
+      const gradId = `heartGrad${i % 3}`;
+
+      wrap.style.left = left + "%";
+      wrap.style.animationDuration = floatDuration + "s";
+      wrap.style.animationDelay = delay + "s";
+      wrap.style.setProperty("--max-opacity", maxOpacity);
+
+      wrap.innerHTML = `
+        <svg class="heart-svg" width="${size}" height="${size}" viewBox="0 0 24 24"
+             style="animation-duration:${swayDuration}s; --sway:${sway};">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+                   2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
+                   C13.09 3.81 14.76 3 16.5 3
+                   19.58 3 22 5.42 22 8.5
+                   c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                fill="url(#${gradId})" />
+          <path d="M5.2 6.8c.7-1.4 2.1-2.1 3.4-1.8.4.1.6.5.4.8-.2.3-.5.4-.9.3-.8-.2-1.7.3-2.2 1.2-.2.3-.5.4-.8.2-.2-.1-.3-.4-.1-.7z"
+                fill="rgba(255, 190, 220, 0.18)" />
+        </svg>
+      `;
+
+      heartFragment.appendChild(wrap);
+    }
+
+    heartsLayer.appendChild(heartFragment);
+
+    // 60fps center-screen pop notification & tilt controller
+    const cards = Array.from(document.querySelectorAll(".card"));
+    let viewportCenter = window.innerHeight * 0.5;
+    let triggerRange = window.innerHeight * 0.34;
+    let activeCard = null;
+    let ticking = false;
+
+    function updateMetrics() {
+      viewportCenter = window.innerHeight * 0.5;
+      triggerRange = window.innerHeight * 0.34;
+    }
+
+    function updateCenterPhoto() {
+      let closestCard = null;
+      let closestDistance = Infinity;
+
+      for (let i = 0; i < cards.length; i++) {
+        const rect = cards[i].getBoundingClientRect();
+        const cardCenter = rect.top + rect.height * 0.5;
+        const distance = Math.abs(cardCenter - viewportCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestCard = cards[i];
+        }
+      }
+
+      const nextActive = closestDistance <= triggerRange ? closestCard : null;
+
+      if (nextActive !== activeCard) {
+        if (activeCard) activeCard.classList.remove("is-active");
+        if (nextActive) nextActive.classList.add("is-active");
+        activeCard = nextActive;
+      }
+
+      ticking = false;
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(updateCenterPhoto);
+        ticking = true;
+      }
+    }
+
+    function onResize() {
+      updateMetrics();
+      onScroll();
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("load", updateCenterPhoto);
+    updateCenterPhoto();
+  </script>
+
+</body>
+</html>
