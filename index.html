@@ -28,6 +28,7 @@
       color: #d1d5db;
       overflow-x: clip;
       position: relative;
+      touch-action: pan-y;
     }
 
     /* Isolated GPU-Composited Floating Hearts Layer */
@@ -37,8 +38,8 @@
       overflow: hidden;
       pointer-events: none;
       z-index: 0;
-      contain: layout style paint;
-      transform: translateZ(0);
+      contain: strict;
+      transform: translate3d(0, 0, 0);
     }
 
     .heart-wrap {
@@ -75,15 +76,13 @@
       }
     }
 
+    /* Seamless pendulum sway (no mid-swing pause) */
     @keyframes bobbleSway {
       0% {
-        transform: translate3d(calc(var(--sway, 16px) * -1), 0, 0) rotate(-8deg) scale(0.95);
-      }
-      50% {
-        transform: translate3d(0, 0, 0) rotate(0deg) scale(1.02);
+        transform: translate3d(calc(var(--sway, 16px) * -1), 0, 0) rotate(-7deg) scale(0.96);
       }
       100% {
-        transform: translate3d(var(--sway, 16px), 0, 0) rotate(8deg) scale(0.97);
+        transform: translate3d(var(--sway, 16px), 0, 0) rotate(7deg) scale(1.02);
       }
     }
 
@@ -190,7 +189,7 @@
       --tilt: 2.2deg;
     }
 
-    /* SINGLE GPU-Composited Layer per Card (photo + vignette + glow move in total lockstep) */
+    /* SINGLE GPU-Composited Layer per Card */
     .card-inner {
       position: relative;
       border-radius: 18px;
@@ -204,8 +203,8 @@
         0 12px 22px -6px rgba(0, 0, 0, 0.82),
         0 4px 10px -2px rgba(0, 0, 0, 0.65);
       transition:
-        transform 0.52s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+        transform 0.68s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.52s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     /* Pop-Out Glow Layer (opacity-only transition, locked inside .card-inner) */
@@ -217,10 +216,11 @@
       border-radius: 18px;
       pointer-events: none;
       opacity: 0;
+      will-change: opacity;
       box-shadow:
         0 22px 38px -8px rgba(0, 0, 0, 0.92),
         0 0 26px rgba(196, 56, 124, 0.36);
-      transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     /* Smooth Black Border & Corner Vignette Overlay (inherits .card-inner transform for free) */
@@ -284,8 +284,8 @@
       -webkit-backface-visibility: hidden;
       will-change: transform, opacity;
       transition:
-        transform 0.52s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+        transform 0.68s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.52s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     .card-last.is-active .pop-wish {
@@ -309,7 +309,9 @@
       box-shadow:
         0 10px 22px rgba(0, 0, 0, 0.75),
         0 0 14px rgba(156, 41, 97, 0.25);
-      transition: transform 0.2s ease, background-color 0.2s ease;
+      transition:
+        transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 0.28s ease;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -340,7 +342,7 @@
       flex-wrap: wrap;
     }
 
-    /* Anatomical Pumping Heart (60fps GPU-composited lub-dub pulse) */
+    /* Anatomical Pumping Heart (Fluid GPU-composited lub-dub pulse) */
     .real-heart {
       display: inline-block;
       width: 26px;
@@ -350,15 +352,15 @@
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       transform-origin: center center;
-      animation: realHeartPump 1.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+      animation: realHeartPump 1.2s cubic-bezier(0.37, 0, 0.63, 1) infinite;
     }
 
     @keyframes realHeartPump {
       0%   { transform: translate3d(0, 0, 0) scale(0.86); }
-      14%  { transform: translate3d(0, 0, 0) scale(1.04); }
-      26%  { transform: translate3d(0, 0, 0) scale(0.89); }
-      38%  { transform: translate3d(0, 0, 0) scale(1); }
-      65%  { transform: translate3d(0, 0, 0) scale(0.86); }
+      14%  { transform: translate3d(0, 0, 0) scale(1.05); }
+      28%  { transform: translate3d(0, 0, 0) scale(0.90); }
+      42%  { transform: translate3d(0, 0, 0) scale(1.01); }
+      70%  { transform: translate3d(0, 0, 0) scale(0.86); }
       100% { transform: translate3d(0, 0, 0) scale(0.86); }
     }
   </style>
@@ -402,31 +404,31 @@
   <main class="container">
     <section class="card">
       <div class="card-inner">
-        <img src="photo1.jpg" alt="Khushi 1" class="section-photo" decoding="async" />
+        <img src="photo1.jpg" alt="Khushi 1" class="section-photo" decoding="async" loading="eager" />
       </div>
     </section>
 
     <section class="card">
       <div class="card-inner">
-        <img src="photo2.jpg" alt="Khushi 2" class="section-photo" decoding="async" />
+        <img src="photo2.jpg" alt="Khushi 2" class="section-photo" decoding="async" loading="eager" />
       </div>
     </section>
 
     <section class="card">
       <div class="card-inner">
-        <img src="photo3.jpg" alt="Khushi 3" class="section-photo" decoding="async" />
+        <img src="photo3.jpg" alt="Khushi 3" class="section-photo" decoding="async" loading="eager" />
       </div>
     </section>
 
     <section class="card">
       <div class="card-inner">
-        <img src="photo4.jpg" alt="Khushi 4" class="section-photo" decoding="async" />
+        <img src="photo4.jpg" alt="Khushi 4" class="section-photo" decoding="async" loading="eager" />
       </div>
     </section>
 
     <section class="card card-last">
       <div class="card-inner">
-        <img src="photo5.jpg" alt="Khushi 5" class="section-photo" decoding="async" />
+        <img src="photo5.jpg" alt="Khushi 5" class="section-photo" decoding="async" loading="eager" />
       </div>
       <p class="pop-wish script-gradient-darker">Congratulations ! You Turned to 18 Years Today.</p>
     </section>
@@ -501,10 +503,10 @@
 
       const size = 18 + Math.random() * 26;
       const left = Math.random() * 94;
-      const floatDuration = 8 + Math.random() * 9;
-      const swayDuration = 2.4 + Math.random() * 2.2;
+      const floatDuration = 9 + Math.random() * 7;
+      const swayDuration = 2.6 + Math.random() * 1.8;
       const delay = -(Math.random() * floatDuration);
-      const sway = (10 + Math.random() * 18).toFixed(1) + "px";
+      const sway = (10 + Math.random() * 16).toFixed(1) + "px";
       const maxOpacity = (0.55 + Math.random() * 0.35).toFixed(2);
       const gradId = `heartGrad${i % 3}`;
 
@@ -532,14 +534,14 @@
 
     heartsLayer.appendChild(heartFragment);
 
-    // Pre-decode images into GPU memory so first-time scroll pops never stutter
+    // Pre-decode images into GPU memory so scroll pops never stutter
     document.querySelectorAll(".section-photo").forEach((img) => {
       if (img.decode) {
         img.decode().catch(() => {});
       }
     });
 
-    // Smooth mobile-ready center-screen pop controller with hysteresis
+    // Smooth rAF-synced center-screen pop controller with wide hysteresis
     const cards = Array.from(document.querySelectorAll(".card"));
     let activeCard = null;
     let ticking = false;
@@ -553,8 +555,8 @@
     function updateCenterPhoto() {
       const vh = window.innerHeight || document.documentElement.clientHeight;
       const viewportCenter = vh * 0.5;
-      const enterRange = vh * 0.28;
-      const exitRange = vh * 0.37;
+      const enterRange = vh * 0.30;
+      const exitRange = vh * 0.40;
 
       let closestCard = null;
       let closestDistance = Infinity;
