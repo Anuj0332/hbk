@@ -14,29 +14,25 @@
       padding: 0;
     }
 
-    html {
-      scroll-behavior: smooth;
-      background-color: #000000;
-      overflow-x: clip;
-    }
-
+    html,
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background-color: #000000;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #d1d5db;
-      overflow-x: clip;
-      position: relative;
+      overscroll-behavior: none;
     }
 
-    /* Fixed GPU-Cached 45deg Background (prevents mobile URL-bar repaint jitter) */
-    .bg-gradient {
+    /* Fixed 45-degree gradient: bottom-left black to top-right pink */
+    .bg-layer {
       position: fixed;
       inset: 0;
-      z-index: -2;
+      z-index: 0;
       pointer-events: none;
-      background: linear-gradient(45deg, #000000, #4f1833);
-      transform: translateZ(0);
+      background: linear-gradient(to top right, #000000 0%, #3b0f25 52%, #9c2961 100%);
+      transform: translate3d(0, 0, 0);
     }
 
     /* Isolated GPU-Composited Floating Hearts Layer */
@@ -45,9 +41,8 @@
       inset: 0;
       overflow: hidden;
       pointer-events: none;
-      z-index: 0;
-      contain: layout style paint;
-      transform: translateZ(0);
+      z-index: 1;
+      transform: translate3d(0, 0, 0);
     }
 
     .heart-wrap {
@@ -61,7 +56,6 @@
 
     .heart-svg {
       display: block;
-      will-change: transform;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       animation: bobbleSway ease-in-out infinite alternate;
@@ -86,23 +80,119 @@
 
     @keyframes bobbleSway {
       0% {
-        transform: translate3d(calc(var(--sway, 16px) * -1), 0, 0) rotate(-8deg) scale(0.95);
-      }
-      50% {
-        transform: translate3d(0, 0, 0) rotate(0deg) scale(1.02);
+        transform: translate3d(calc(var(--sway, 14px) * -1), 0, 0) rotate(-6deg) scale(0.96);
       }
       100% {
-        transform: translate3d(var(--sway, 16px), 0, 0) rotate(8deg) scale(0.97);
+        transform: translate3d(var(--sway, 14px), 0, 0) rotate(6deg) scale(1.02);
       }
+    }
+
+    /* Opening Intro Overlay (Before Anything Starts) */
+    .intro-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 24px;
+      text-align: center;
+      background: rgba(10, 2, 6, 0.78);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: 1;
+      transform: scale(1) translate3d(0, 0, 0);
+      transition:
+        opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      touch-action: manipulation;
+    }
+
+    .intro-overlay.is-hidden {
+      opacity: 0;
+      transform: scale(1.04) translate3d(0, 0, 0);
+      pointer-events: none;
+    }
+
+    .intro-title {
+      font-size: clamp(2.5rem, 10vw, 3.6rem);
+      line-height: 1.25;
+      padding: 6px 16px;
+    }
+
+    .intro-play-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(156, 41, 97, 0.85), rgba(45, 10, 28, 0.95));
+      border: 1.5px solid rgba(245, 194, 220, 0.55);
+      color: #f5c2dc;
+      box-shadow:
+        0 14px 32px rgba(0, 0, 0, 0.75),
+        0 0 26px rgba(196, 56, 124, 0.42);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.25s ease;
+    }
+
+    .intro-play-btn::before {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid rgba(245, 194, 220, 0.32);
+      animation: playPulse 2s ease-out infinite;
+      pointer-events: none;
+    }
+
+    .intro-play-btn:active {
+      transform: scale(0.92);
+    }
+
+    .intro-play-btn svg {
+      margin-left: 4px;
+    }
+
+    @keyframes playPulse {
+      0% {
+        transform: scale(0.96);
+        opacity: 0.75;
+      }
+      100% {
+        transform: scale(1.32);
+        opacity: 0;
+      }
+    }
+
+    /* Fixed Viewport + Single GPU-Composited Scroll Stage for True 60/120fps */
+    .viewport {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .scroll-stage {
+      width: 100%;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     /* Barless Top Title Area */
     .hero-title {
-      position: relative;
-      z-index: 1;
       text-align: center;
       padding: 36px 16px 10px;
-      contain: layout style;
     }
 
     .hero-title h1 {
@@ -110,7 +200,7 @@
       padding: 4px 12px;
     }
 
-    /* Shared Great Vibes Style + Subtle 45deg Dark Pink to #f5c2dc Gradient */
+    /* Great Vibes Gradient Text */
     .script-gradient {
       font-family: "Great Vibes", "Brush Script MT", cursive;
       font-style: italic;
@@ -119,19 +209,16 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      filter: drop-shadow(0 2px 10px rgba(244, 114, 182, 0.25));
     }
 
-    /* 1.5x Darker & Smaller Variant for Pop-Up Congratulations Text */
     .script-gradient-darker {
       font-family: "Great Vibes", "Brush Script MT", cursive;
       font-style: italic;
       font-weight: 400;
-      background: linear-gradient(45deg, #681b41 0%, #a87490 45%, #a87490 100%);
+      background: linear-gradient(45deg, #681b41 0%, #d49bb8 45%, #d49bb8 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      filter: drop-shadow(0 2px 8px rgba(168, 116, 144, 0.22));
     }
 
     .hero-title .line-top {
@@ -153,7 +240,6 @@
     .closing-wrap {
       text-align: center;
       padding: 12px 8px 0;
-      contain: layout style;
     }
 
     .closing-text {
@@ -165,32 +251,27 @@
 
     /* Main Mobile Container */
     .container {
-      position: relative;
-      z-index: 1;
       width: 100%;
       max-width: 480px;
       margin: 0 auto;
-      padding: 12px 16px 24px;
+      padding: 28px 16px 24px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 38px;
     }
 
-    /* Layout Wrapper (keeps space stable; max visual size = scale(1) so iOS/Android never re-rasterize) */
+    /* Card Wrapper */
     .card {
       position: relative;
       width: 88%;
       max-width: 344px;
       margin: 0 auto;
-      contain: layout style;
     }
 
-    /* Extra breathing room under the last photo for the wish text */
     .card-last {
       margin-bottom: 42px;
     }
 
-    /* Alternating subtle tilt directions */
     .card:nth-child(odd) {
       --tilt: -2.2deg;
     }
@@ -199,40 +280,35 @@
       --tilt: 2.2deg;
     }
 
-    /* SINGLE GPU-Composited Layer per Card (photo + vignette + glow move in total lockstep) */
+    /* Lightweight Soft Glow Behind Static Card */
+    .card-glow {
+      position: absolute;
+      inset: -18px;
+      z-index: 0;
+      border-radius: 32px;
+      pointer-events: none;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(196, 56, 124, 0.24) 24%,
+        rgba(0, 0, 0, 0.45) 58%,
+        rgba(0, 0, 0, 0) 78%
+      );
+      transform: rotate(var(--tilt, -2.2deg)) translate3d(0, 0, 0);
+    }
+
+    /* Still Photo Card in Alternating Tilt */
     .card-inner {
       position: relative;
+      z-index: 1;
       border-radius: 18px;
-      opacity: 0.84;
-      transform: translate3d(0, 0, 0) scale(0.81) rotate(0deg);
+      overflow: hidden;
+      transform: rotate(var(--tilt, -2.2deg)) translate3d(0, 0, 0);
       transform-origin: center center;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      will-change: transform, opacity;
-      box-shadow:
-        0 12px 22px -6px rgba(0, 0, 0, 0.82),
-        0 4px 10px -2px rgba(0, 0, 0, 0.65);
-      transition:
-        transform 0.52s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    /* Pop-Out Glow Layer (opacity-only transition, locked inside .card-inner) */
-    .card-inner::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      border-radius: 18px;
-      pointer-events: none;
-      opacity: 0;
-      box-shadow:
-        0 22px 38px -8px rgba(0, 0, 0, 0.92),
-        0 0 26px rgba(196, 56, 124, 0.36);
-      transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    /* Smooth Black Border & Corner Vignette Overlay (inherits .card-inner transform for free) */
+    /* Pure Radial-Gradient Black Vignette */
     .card-inner::after {
       content: "";
       position: absolute;
@@ -243,20 +319,9 @@
       background: radial-gradient(
         ellipse at center,
         rgba(0, 0, 0, 0) 48%,
-        rgba(0, 0, 0, 0.32) 76%,
-        rgba(0, 0, 0, 0.8) 100%
+        rgba(0, 0, 0, 0.36) 75%,
+        rgba(0, 0, 0, 0.88) 100%
       );
-      box-shadow: inset 0 0 26px 6px rgba(0, 0, 0, 0.72);
-    }
-
-    /* Active Centered State: pops smoothly to crisp 1:1 scale(1) */
-    .card.is-active .card-inner {
-      opacity: 1;
-      transform: translate3d(0, -14px, 0) scale(1) rotate(var(--tilt, -2.2deg));
-    }
-
-    .card.is-active .card-inner::before {
-      opacity: 1;
     }
 
     /* Vertical Portrait Photo */
@@ -271,35 +336,66 @@
       border-radius: 18px;
       border: none;
       background: linear-gradient(145deg, #2a0a1a, #12040b);
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
     }
 
-    /* Smaller, 1.5x Darker Pop-Up Text Near Last Photo */
+    /* Overlapping Corner Stickers */
+    .corner-sticker {
+      position: absolute;
+      z-index: 4;
+      pointer-events: none;
+      transform-origin: center center;
+    }
+
+    .corner-sticker svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sticker-tr {
+      top: -30px;
+      right: -16px;
+      width: 86px;
+      height: 86px;
+      transform: rotate(10deg) translate3d(0, 0, 0);
+    }
+
+    .sticker-tl {
+      top: -30px;
+      left: -16px;
+      width: 88px;
+      height: 88px;
+      transform: rotate(-10deg) translate3d(0, 0, 0);
+    }
+
+    .sticker-bmw {
+      top: -26px;
+      right: -14px;
+      width: 76px;
+      height: 76px;
+      transform: rotate(10deg) translate3d(0, 0, 0);
+    }
+
+    .sticker-hb {
+      top: -28px;
+      right: -16px;
+      width: 112px;
+      height: 86px;
+      transform: rotate(9deg) translate3d(0, 0, 0);
+    }
+
+    /* Static Visible Text Near Last Photo */
     .pop-wish {
       position: absolute;
       left: -6%;
       right: -6%;
-      top: calc(100% + 4px);
+      top: calc(100% + 12px);
       z-index: 3;
       text-align: center;
       pointer-events: none;
       font-size: clamp(1.25rem, 4.8vw, 1.55rem);
       line-height: 1.25;
       padding: 0 8px;
-      opacity: 0;
-      transform: translate3d(0, 14px, 0) scale(0.92);
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      will-change: transform, opacity;
-      transition:
-        transform 0.52s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .card-last.is-active .pop-wish {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1);
     }
 
     /* Small Circular Upward Arrow Button */
@@ -315,11 +411,12 @@
       border: 1px solid rgba(245, 194, 220, 0.28);
       color: #f5c2dc;
       text-decoration: none;
-      box-shadow:
-        0 10px 22px rgba(0, 0, 0, 0.75),
-        0 0 14px rgba(156, 41, 97, 0.25);
-      transition: transform 0.2s ease, background-color 0.2s ease;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.65);
+      transition:
+        transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 0.25s ease;
       -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
     }
 
     .top-circle-btn:active {
@@ -327,10 +424,10 @@
       background: rgba(79, 24, 51, 0.85);
     }
 
-    /* Small Normal Pink Footer Signature + Realistic Pumping Heart */
+    /* Footer Signature + Realistic Pumping Heart */
     .footer-note {
       text-align: center;
-      padding: 0 12px 24px;
+      padding: 0 12px 28px;
       margin-top: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 0.85rem;
@@ -338,7 +435,6 @@
       line-height: 1.7;
       color: #f48fb1;
       letter-spacing: 0.2px;
-      contain: layout style;
     }
 
     .footer-line {
@@ -349,7 +445,6 @@
       flex-wrap: wrap;
     }
 
-    /* Anatomical Pumping Heart (60fps GPU-composited lub-dub pulse) */
     .real-heart {
       display: inline-block;
       width: 26px;
@@ -359,22 +454,25 @@
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       transform-origin: center center;
-      animation: realHeartPump 1.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+      animation: realHeartPump 1.2s cubic-bezier(0.37, 0, 0.63, 1) infinite;
     }
 
     @keyframes realHeartPump {
       0%   { transform: translate3d(0, 0, 0) scale(0.86); }
-      14%  { transform: translate3d(0, 0, 0) scale(1.04); }
-      26%  { transform: translate3d(0, 0, 0) scale(0.89); }
-      38%  { transform: translate3d(0, 0, 0) scale(1); }
-      65%  { transform: translate3d(0, 0, 0) scale(0.86); }
+      14%  { transform: translate3d(0, 0, 0) scale(1.05); }
+      28%  { transform: translate3d(0, 0, 0) scale(0.90); }
+      42%  { transform: translate3d(0, 0, 0) scale(1.01); }
+      70%  { transform: translate3d(0, 0, 0) scale(0.86); }
       100% { transform: translate3d(0, 0, 0) scale(0.86); }
     }
   </style>
 </head>
-<body id="top">
+<body>
 
-  <div class="bg-gradient" aria-hidden="true"></div>
+  <!-- Birthday Song Audio (Save your file as song.mp3 in the same folder) -->
+  <audio id="bgSong" src="song.mp3" preload="auto" playsinline></audio>
+
+  <div class="bg-layer" aria-hidden="true"></div>
 
   <!-- Shared SVG Gradients for 3D Dark Pink Hearts -->
   <svg width="0" height="0" style="position:absolute; visibility:hidden;" aria-hidden="true">
@@ -402,121 +500,269 @@
   <!-- Background Flying Hearts -->
   <div class="hearts-layer" id="heartsLayer" aria-hidden="true"></div>
 
-  <!-- Great Vibes Subtle Gradient Title -->
-  <div class="hero-title">
-    <h1>
-      <span class="line-top script-gradient">Happy Birthday</span>
-      <span class="line-name script-gradient">Khushi</span>
-    </h1>
+  <!-- Welcome Overlay Shown First Before Anything Starts -->
+  <div class="intro-overlay" id="introOverlay">
+    <p class="intro-title script-gradient">Celebrate The Birthday !</p>
+    <button type="button" class="intro-play-btn" id="introPlayBtn" aria-label="Play Birthday Celebration">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <polygon points="6,3 20,12 6,21" />
+      </svg>
+    </button>
   </div>
 
-  <main class="container">
-    <section class="card">
-      <div class="card-inner">
-        <img src="photo1.jpg" alt="Khushi 1" class="section-photo" decoding="async" />
+  <!-- Smooth GPU Scroll Viewport -->
+  <div class="viewport" id="viewport">
+    <div class="scroll-stage" id="scrollStage">
+      <div class="hero-title">
+        <h1>
+          <span class="line-top script-gradient">Happy Birthday</span>
+          <span class="line-name script-gradient">Khushi</span>
+        </h1>
       </div>
-    </section>
 
-    <section class="card">
-      <div class="card-inner">
-        <img src="photo2.jpg" alt="Khushi 2" class="section-photo" decoding="async" />
-      </div>
-    </section>
+      <main class="container">
+        <!-- PHOTO 1: 4-Candle Cake on TOP-RIGHT -->
+        <section class="card">
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="card-inner">
+            <img src="photo1.jpg" alt="Khushi 1" class="section-photo" decoding="async" loading="eager" />
+          </div>
+          <div class="corner-sticker sticker-tr" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="cakeBaseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#632e31" />
+                  <stop offset="100%" stop-color="#451e20" />
+                </linearGradient>
+                <pattern id="stripeOrange" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(42)">
+                  <rect width="6" height="6" fill="#d94f30" />
+                  <rect width="2.2" height="6" fill="#f7efe8" />
+                </pattern>
+                <pattern id="stripePurple" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(42)">
+                  <rect width="6" height="6" fill="#7c56b8" />
+                  <rect width="2.2" height="6" fill="#f7efe8" />
+                </pattern>
+                <pattern id="stripeMint" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(42)">
+                  <rect width="6" height="6" fill="#59bf9e" />
+                  <rect width="2.2" height="6" fill="#f7efe8" />
+                </pattern>
+                <pattern id="stripeBlue" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(42)">
+                  <rect width="6" height="6" fill="#4982b8" />
+                  <rect width="2.2" height="6" fill="#f2dc7e" />
+                </pattern>
+              </defs>
+              <ellipse cx="60" cy="108" rx="41" ry="6" fill="rgba(0, 0, 0, 0.45)" />
+              <path d="M20 82 L100 82 L99 102 C99 106, 84 108, 60 108 C36 108, 21 106, 21 102 Z" fill="url(#cakeBaseGrad)" />
+              <path d="M19 84 C19 68, 35 64, 60 64 C85 64, 101 68, 101 84 L101 91 C99 95, 94 94, 90 89 C86 84, 80 86, 76 94 C72 101, 65 98, 61 91 C57 84, 51 87, 47 95 C43 102, 37 99, 34 92 C31 86, 26 90, 24 95 C21 98, 19 95, 19 84 Z" fill="#f8f7f5" />
+              <rect x="29" y="45" width="4.8" height="33" rx="1.6" fill="url(#stripeOrange)" />
+              <path d="M31.4 33 C34 37, 34.4 41.5, 31.4 43.2 C28.4 41.5, 28.8 37, 31.4 33 Z" fill="#f7e277" />
+              <path d="M31.4 36.2 C32.8 38.5, 32.9 41, 31.4 42.2 C29.9 41, 30 38.5, 31.4 36.2 Z" fill="#fff7c2" />
+              <rect x="46.5" y="34" width="4.8" height="36" rx="1.6" fill="url(#stripePurple)" />
+              <path d="M48.9 22 C51.5 26, 51.9 30.5, 48.9 32.2 C45.9 30.5, 46.3 26, 48.9 22 Z" fill="#f7e277" />
+              <path d="M48.9 25.2 C50.3 27.5, 50.4 30, 48.9 31.2 C47.4 30, 47.5 27.5, 48.9 25.2 Z" fill="#fff7c2" />
+              <rect x="65.5" y="36" width="4.8" height="34" rx="1.6" fill="url(#stripeMint)" />
+              <path d="M67.9 24 C70.5 28, 70.9 32.5, 67.9 34.2 C64.9 32.5, 65.3 28, 67.9 24 Z" fill="#f7e277" />
+              <path d="M67.9 27.2 C69.3 29.5, 69.4 32, 67.9 33.2 C66.4 32, 66.5 29.5, 67.9 27.2 Z" fill="#fff7c2" />
+              <rect x="84.5" y="46" width="4.8" height="32" rx="1.6" fill="url(#stripeBlue)" />
+              <path d="M86.9 34 C89.5 38, 89.9 42.5, 86.9 44.2 C83.9 42.5, 84.3 38, 86.9 34 Z" fill="#f7e277" />
+              <path d="M86.9 37.2 C88.3 39.5, 88.4 42, 86.9 43.2 C85.4 42, 85.5 39.5, 86.9 37.2 Z" fill="#fff7c2" />
+            </svg>
+          </div>
+        </section>
 
-    <section class="card">
-      <div class="card-inner">
-        <img src="photo3.jpg" alt="Khushi 3" class="section-photo" decoding="async" />
-      </div>
-    </section>
+        <!-- PHOTO 2: Cake Slice on Blue Plate on TOP-LEFT -->
+        <section class="card">
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="card-inner">
+            <img src="photo2.jpg" alt="Khushi 2" class="section-photo" decoding="async" loading="eager" />
+          </div>
+          <div class="corner-sticker sticker-tl" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <ellipse cx="60" cy="95" rx="46" ry="18" fill="rgba(0, 0, 0, 0.42)" />
+              <ellipse cx="60" cy="91" rx="44" ry="17" fill="#9ed8e3" stroke="#4c433e" stroke-width="2" />
+              <ellipse cx="60" cy="90" rx="35" ry="12.5" fill="#bae5ee" stroke="#4c433e" stroke-width="1.3" />
+              <path d="M35 61 L59 50 L87 72 L35 61 Z" fill="#735029" stroke="#4c433e" stroke-width="1.8" stroke-linejoin="round" />
+              <path d="M35 61 L87 72 L87 80 L35 69 Z" fill="#996b34" stroke="#4c433e" stroke-width="1.8" stroke-linejoin="round" />
+              <path d="M35 69 L87 80 L87 90 L35 79 Z" fill="#eabee0" stroke="#4c433e" stroke-width="1.8" stroke-linejoin="round" />
+              <circle cx="44" cy="75" r="1.4" fill="#d989bd" />
+              <circle cx="56" cy="78" r="1.6" fill="#d989bd" />
+              <circle cx="68" cy="81" r="1.4" fill="#d989bd" />
+              <circle cx="78" cy="84" r="1.5" fill="#d989bd" />
+              <path d="M35 79 L87 90 L87 98 L35 86 Z" fill="#9c6f37" stroke="#4c433e" stroke-width="1.8" stroke-linejoin="round" />
+              <path d="M40 59 C40 54, 48 54, 48 59 C48 61, 40 61, 40 59 Z" fill="#ffffff" stroke="#4c433e" stroke-width="1.4" />
+              <path d="M42 56 C42 52, 46 52, 46 56 Z" fill="#ffffff" stroke="#4c433e" stroke-width="1.2" />
+              <path d="M51 52 C51 47, 59 47, 59 52 C59 54, 51 54, 51 52 Z" fill="#ffffff" stroke="#4c433e" stroke-width="1.4" />
+              <path d="M70 67 C70 62, 78 62, 78 67 C78 69, 70 69, 70 67 Z" fill="#ffffff" stroke="#4c433e" stroke-width="1.4" />
+              <path d="M72 64 C72 60, 76 60, 76 64 Z" fill="#ffffff" stroke="#4c433e" stroke-width="1.2" />
+              <rect x="57" y="34" width="7" height="26" rx="2.5" fill="#fcf9c5" stroke="#4c433e" stroke-width="1.6" />
+              <line x1="60.5" y1="30" x2="60.5" y2="34" stroke="#4c433e" stroke-width="1.4" />
+              <path d="M60.5 18 C65 24, 65.5 30, 60.5 31.5 C55.5 30, 56 24, 60.5 18 Z" fill="#f5dc4c" stroke="#4c433e" stroke-width="1.4" />
+              <path d="M60.5 23 C62.8 26.2, 63 29.5, 60.5 30.5 C58 29.5, 58.2 26.2, 60.5 23 Z" fill="#ef8f6e" />
+            </svg>
+          </div>
+        </section>
 
-    <section class="card">
-      <div class="card-inner">
-        <img src="photo4.jpg" alt="Khushi 4" class="section-photo" decoding="async" />
-      </div>
-    </section>
+        <!-- PHOTO 3: BMW Logo on TOP-RIGHT -->
+        <section class="card">
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="card-inner">
+            <img src="photo3.jpg" alt="Khushi 3" class="section-photo" decoding="async" loading="eager" />
+          </div>
+          <div class="corner-sticker sticker-bmw" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="bmwRim" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#dce4ea" />
+                  <stop offset="50%" stop-color="#8b969e" />
+                  <stop offset="100%" stop-color="#566068" />
+                </linearGradient>
+                <radialGradient id="bmwBlack" cx="35%" cy="28%" r="72%">
+                  <stop offset="0%" stop-color="#383d42" />
+                  <stop offset="45%" stop-color="#111315" />
+                  <stop offset="100%" stop-color="#030304" />
+                </radialGradient>
+                <linearGradient id="bmwBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#57b1e8" />
+                  <stop offset="100%" stop-color="#2275b2" />
+                </linearGradient>
+                <linearGradient id="bmwWhite" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffffff" />
+                  <stop offset="100%" stop-color="#cfd6dc" />
+                </linearGradient>
+              </defs>
+              <circle cx="60" cy="62" r="54" fill="rgba(0, 0, 0, 0.48)" />
+              <circle cx="60" cy="60" r="52" fill="url(#bmwRim)" />
+              <circle cx="60" cy="60" r="48.5" fill="url(#bmwBlack)" />
+              <circle cx="60" cy="60" r="32.5" fill="url(#bmwRim)" />
+              <circle cx="60" cy="60" r="30.5" fill="#101214" />
+              <path d="M59 59 L59 30.5 A28.5 28.5 0 0 0 30.5 59 Z" fill="url(#bmwBlue)" />
+              <path d="M61 59 L89.5 59 A28.5 28.5 0 0 0 61 30.5 Z" fill="url(#bmwWhite)" />
+              <path d="M59 61 L30.5 61 A28.5 28.5 0 0 0 59 89.5 Z" fill="url(#bmwWhite)" />
+              <path d="M61 61 L61 89.5 A28.5 28.5 0 0 0 89.5 61 Z" fill="url(#bmwBlue)" />
+              <text x="27" y="34" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="14" text-anchor="middle" transform="rotate(-44 27 30)">B</text>
+              <text x="60" y="23.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="14" text-anchor="middle">M</text>
+              <text x="93" y="34" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="14" text-anchor="middle" transform="rotate(44 93 30)">W</text>
+            </svg>
+          </div>
+        </section>
 
-    <section class="card card-last">
-      <div class="card-inner">
-        <img src="photo5.jpg" alt="Khushi 5" class="section-photo" decoding="async" />
-      </div>
-      <p class="pop-wish script-gradient-darker">Congratulations ! You Turned to 18 Years Today.</p>
-    </section>
+        <!-- PHOTO 4: White Gift Box with Purple Ribbon on TOP-LEFT -->
+        <section class="card">
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="card-inner">
+            <img src="photo4.jpg" alt="Khushi 4" class="section-photo" decoding="async" loading="eager" />
+          </div>
+          <div class="corner-sticker sticker-tl" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <polygon points="56,105 26,80 58,95 88,78" fill="rgba(0, 0, 0, 0.42)" />
+              <polygon points="24,42 56,55 56,101 28,77" fill="#f3f1f6" stroke="#140b18" stroke-width="2.2" stroke-linejoin="round" />
+              <polygon points="56,55 88,39 81,77 56,101" fill="#ffffff" stroke="#140b18" stroke-width="2.2" stroke-linejoin="round" />
+              <polygon points="24,42 57,26 88,39 56,55" fill="#fbfafc" stroke="#140b18" stroke-width="2.2" stroke-linejoin="round" />
+              <polygon points="32,45 43,50 43,90 34,82" fill="#bd40ad" stroke="#140b18" stroke-width="2" stroke-linejoin="round" />
+              <polygon points="68,49 78,44 74,84 67,91" fill="#b337a3" stroke="#140b18" stroke-width="2" stroke-linejoin="round" />
+              <polygon points="32,45 64,29 73,33 43,50" fill="#bd40ad" stroke="#140b18" stroke-width="1.9" stroke-linejoin="round" />
+              <polygon points="46,31 56,26 78,44 68,49" fill="#9c298d" stroke="#140b18" stroke-width="1.9" stroke-linejoin="round" />
+              <path d="M51 31 C38 14, 24 19, 30 30 C35 38, 46 37, 51 34 Z" fill="#bd40ad" stroke="#140b18" stroke-width="2.2" stroke-linejoin="round" />
+              <path d="M48 31 C40 22, 32 24, 35 30 C37 33, 44 33, 48 32 Z" fill="#6b1861" stroke="#140b18" stroke-width="1.6" />
+              <path d="M58 34 C72 24, 94 21, 93 33 C92 43, 73 43, 58 36 Z" fill="#bd40ad" stroke="#140b18" stroke-width="2.2" stroke-linejoin="round" />
+              <path d="M62 35 C72 29, 86 28, 85 34 C84 39, 71 39, 62 35 Z" fill="#6b1861" stroke="#140b18" stroke-width="1.6" />
+              <path d="M47 32 C50 26, 58 26, 61 32 C61 37, 51 39, 47 35 Z" fill="#d154c1" stroke="#140b18" stroke-width="2.2" stroke-linejoin="round" />
+            </svg>
+          </div>
+        </section>
 
-    <div class="closing-wrap">
-      <p class="closing-text script-gradient">I love you !</p>
+        <!-- PHOTO 5: Mint-Green "Happy Birthday" + Stars on TOP-RIGHT -->
+        <section class="card card-last">
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="card-inner">
+            <img src="photo5.jpg" alt="Khushi 5" class="section-photo" decoding="async" loading="eager" />
+          </div>
+          <div class="corner-sticker sticker-hb" aria-hidden="true">
+            <svg viewBox="0 0 150 115">
+              <polygon points="48,14 50,19 55,19 51,22 52,27 48,24 44,27 45,22 41,19 46,19" fill="#52c41a" stroke="#0d1a14" stroke-width="1" />
+              <polygon points="62,8 63,11 66,11 64,13 65,16 62,14 59,16 60,13 58,11 61,11" fill="#0fd9a4" stroke="#0d1a14" stroke-width="0.9" />
+              <polygon points="103,14 104,17 107,17 105,19 106,22 103,20 100,22 101,19 99,17 102,17" fill="#17d4b8" stroke="#0d1a14" stroke-width="0.9" />
+              <polygon points="122,30 124,35 129,35 125,38 126,43 122,40 118,43 119,38 115,35 120,35" fill="#eb4d55" stroke="#0d1a14" stroke-width="1" />
+              <polygon points="129,48 131,52 135,52 132,55 133,59 129,56 125,59 126,55 123,52 127,52" fill="#6b35f2" stroke="#0d1a14" stroke-width="0.9" />
+              <polygon points="16,52 18,55 21,55 19,57 20,60 16,58 13,60 14,57 11,55 15,55" fill="#1890ff" stroke="#0d1a14" stroke-width="0.9" />
+              <polygon points="18,68 19,71 22,71 20,73 21,76 18,74 15,76 16,73 14,71 17,71" fill="#0ad496" stroke="#0d1a14" stroke-width="0.9" />
+              <text x="72" y="53" text-anchor="middle" font-family="'Great Vibes', cursive" font-size="38" fill="#ffffff" stroke="#ffffff" stroke-width="2.5">Happy</text>
+              <text x="78" y="92" text-anchor="middle" font-family="'Great Vibes', cursive" font-size="38" fill="#ffffff" stroke="#ffffff" stroke-width="2.5">Birthday</text>
+              <text x="70" y="51" text-anchor="middle" font-family="'Great Vibes', cursive" font-size="38" fill="#0ad494" stroke="#081410" stroke-width="1.6" paint-order="stroke fill">Happy</text>
+              <text x="76" y="90" text-anchor="middle" font-family="'Great Vibes', cursive" font-size="38" fill="#0ad494" stroke="#081410" stroke-width="1.6" paint-order="stroke fill">Birthday</text>
+            </svg>
+          </div>
+          <p class="pop-wish script-gradient-darker">Congratulations ! You Turned to 18 Years Today.</p>
+        </section>
+
+        <div class="closing-wrap">
+          <p class="closing-text script-gradient">I love you !</p>
+        </div>
+
+        <button type="button" class="top-circle-btn" id="backToTopBtn" aria-label="Back to Top">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5" />
+            <path d="M5 12l7-7 7 7" />
+          </svg>
+        </button>
+
+        <footer class="footer-note">
+          <p class="footer-line">
+            <span>A Little Gift From Anuj !</span>
+            <svg class="real-heart" viewBox="0 0 64 64" aria-hidden="true">
+              <defs>
+                <radialGradient id="anatMuscle" cx="42%" cy="48%" r="58%">
+                  <stop offset="0%" stop-color="#d63864" />
+                  <stop offset="48%" stop-color="#8f173c" />
+                  <stop offset="85%" stop-color="#4d0920" />
+                  <stop offset="100%" stop-color="#2b0310" />
+                </radialGradient>
+                <linearGradient id="anatAorta" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#c93b63" />
+                  <stop offset="100%" stop-color="#610c27" />
+                </linearGradient>
+                <linearGradient id="anatVena" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#7c2853" />
+                  <stop offset="100%" stop-color="#360921" />
+                </linearGradient>
+              </defs>
+              <path d="M18 10 C18 16, 19 22, 21 26 L27 25 C25 20, 25 14, 25 9 Z" fill="url(#anatVena)" />
+              <path d="M27 25 C27 14, 34 9, 41 12 C45 14, 46 19, 43 24 L37 25 C39 21, 38 17, 35 17 C33 17, 32 21, 32 26 Z" fill="url(#anatAorta)" />
+              <path d="M31 12 L31 6 M36 10 L37 5 M40 12 L43 7" stroke="#a6244b" stroke-width="2.4" stroke-linecap="round" />
+              <path d="M29 29 C34 22, 43 20, 50 22 L49 27 C43 26, 37 27, 33 32 Z" fill="url(#anatVena)" />
+              <path d="M21 24 C14 27, 13 36, 17 43 C21 51, 30 57, 39 58 C44 59, 47 56, 48 51 C51 43, 50 32, 43 27 C37 23, 27 22, 21 24 Z" fill="url(#anatMuscle)" />
+              <path d="M18 26 C15 29, 15 35, 19 37 C22 38, 25 34, 24 29 Z" fill="#6b0e2c" opacity="0.85" />
+              <path d="M32 28 C32 35, 34 42, 39 51 M33 36 C28 39, 25 43, 24 47 M35 41 C40 42, 44 45, 46 49"
+                    fill="none" stroke="#3b0416" stroke-width="1.4" stroke-linecap="round" opacity="0.75" />
+              <path d="M31.5 29 C31.5 35, 33.5 42, 38.5 50.5"
+                    fill="none" stroke="rgba(255, 180, 205, 0.35)" stroke-width="0.7" stroke-linecap="round" />
+              <path d="M22 33 C20 37, 22 43, 26 47" fill="none" stroke="rgba(255, 200, 220, 0.28)" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </p>
+        </footer>
+      </main>
     </div>
-
-    <!-- Small Circular Upward Arrow -->
-    <a href="#top" class="top-circle-btn" aria-label="Back to Top">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 19V5" />
-        <path d="M5 12l7-7 7 7" />
-      </svg>
-    </a>
-
-    <!-- Small Normal Pink Bottom Text + Realistic Pumping Anatomical Heart -->
-    <footer class="footer-note">
-      <p class="footer-line">
-        <span>A Little Gift From Anuj !</span>
-        <svg class="real-heart" viewBox="0 0 64 64" aria-hidden="true">
-          <defs>
-            <radialGradient id="anatMuscle" cx="42%" cy="48%" r="58%">
-              <stop offset="0%" stop-color="#d63864" />
-              <stop offset="48%" stop-color="#8f173c" />
-              <stop offset="85%" stop-color="#4d0920" />
-              <stop offset="100%" stop-color="#2b0310" />
-            </radialGradient>
-            <linearGradient id="anatAorta" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#c93b63" />
-              <stop offset="100%" stop-color="#610c27" />
-            </linearGradient>
-            <linearGradient id="anatVena" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#7c2853" />
-              <stop offset="100%" stop-color="#360921" />
-            </linearGradient>
-          </defs>
-          <!-- Superior Vena Cava -->
-          <path d="M18 10 C18 16, 19 22, 21 26 L27 25 C25 20, 25 14, 25 9 Z" fill="url(#anatVena)" />
-          <!-- Aortic Arch & Branches -->
-          <path d="M27 25 C27 14, 34 9, 41 12 C45 14, 46 19, 43 24 L37 25 C39 21, 38 17, 35 17 C33 17, 32 21, 32 26 Z" fill="url(#anatAorta)" />
-          <path d="M31 12 L31 6 M36 10 L37 5 M40 12 L43 7" stroke="#a6244b" stroke-width="2.4" stroke-linecap="round" />
-          <!-- Pulmonary Trunk -->
-          <path d="M29 29 C34 22, 43 20, 50 22 L49 27 C43 26, 37 27, 33 32 Z" fill="url(#anatVena)" />
-          <!-- Main Ventricular & Atrial Muscular Body -->
-          <path d="M21 24 C14 27, 13 36, 17 43 C21 51, 30 57, 39 58 C44 59, 47 56, 48 51 C51 43, 50 32, 43 27 C37 23, 27 22, 21 24 Z" fill="url(#anatMuscle)" />
-          <!-- Right Auricle Flap -->
-          <path d="M18 26 C15 29, 15 35, 19 37 C22 38, 25 34, 24 29 Z" fill="#6b0e2c" opacity="0.85" />
-          <!-- Coronary Vessels -->
-          <path d="M32 28 C32 35, 34 42, 39 51 M33 36 C28 39, 25 43, 24 47 M35 41 C40 42, 44 45, 46 49"
-                fill="none" stroke="#3b0416" stroke-width="1.4" stroke-linecap="round" opacity="0.75" />
-          <path d="M31.5 29 C31.5 35, 33.5 42, 38.5 50.5"
-                fill="none" stroke="rgba(255, 180, 205, 0.35)" stroke-width="0.7" stroke-linecap="round" />
-          <!-- Tissue Specular Highlight -->
-          <path d="M22 33 C20 37, 22 43, 26 47" fill="none" stroke="rgba(255, 200, 220, 0.28)" stroke-width="1.8" stroke-linecap="round" />
-        </svg>
-      </p>
-    </footer>
-  </main>
+  </div>
 
   <script>
-    // Batch-insert 12 GPU-composited 3D dark pink hearts
+    // Insert 8 lightweight GPU-composited 3D dark pink hearts
     const heartsLayer = document.getElementById("heartsLayer");
     const heartFragment = document.createDocumentFragment();
-    const heartCount = 12;
+    const heartCount = 8;
 
     for (let i = 0; i < heartCount; i++) {
       const wrap = document.createElement("div");
       wrap.className = "heart-wrap";
 
-      const size = 18 + Math.random() * 26;
-      const left = Math.random() * 94;
-      const floatDuration = 8 + Math.random() * 9;
-      const swayDuration = 2.4 + Math.random() * 2.2;
+      const size = 18 + Math.random() * 24;
+      const left = (i * 11.5 + Math.random() * 8).toFixed(1);
+      const floatDuration = 9.5 + Math.random() * 6;
+      const swayDuration = 2.8 + Math.random() * 1.6;
       const delay = -(Math.random() * floatDuration);
-      const sway = (10 + Math.random() * 18).toFixed(1) + "px";
-      const maxOpacity = (0.55 + Math.random() * 0.35).toFixed(2);
+      const sway = (10 + Math.random() * 14).toFixed(1) + "px";
+      const maxOpacity = (0.55 + Math.random() * 0.32).toFixed(2);
       const gradId = `heartGrad${i % 3}`;
 
       wrap.style.left = left + "%";
@@ -543,74 +789,330 @@
 
     heartsLayer.appendChild(heartFragment);
 
-    // Pre-decode images into GPU memory so first-time scroll pops never stutter
+    // Pre-decode images into GPU memory so scrolling stays locked at 60/120fps
     document.querySelectorAll(".section-photo").forEach((img) => {
       if (img.decode) {
         img.decode().catch(() => {});
       }
+      img.addEventListener("load", updateBounds, { once: true });
     });
 
-    // Smooth mobile-ready center-screen pop controller with hysteresis
-    const cards = Array.from(document.querySelectorAll(".card"));
-    let activeCard = null;
-    let ticking = false;
+    // Enhanced Audio Loop (Cuts first 2.0 seconds on start and every loop)
+    const CUT_START_SEC = 2.0;
+    const bgSong = document.getElementById("bgSong");
+    const introOverlay = document.getElementById("introOverlay");
+    const introPlayBtn = document.getElementById("introPlayBtn");
 
-    function getCardDistance(card, viewportCenter) {
-      const rect = card.getBoundingClientRect();
-      const cardCenter = rect.top + rect.height * 0.5;
-      return Math.abs(cardCenter - viewportCenter);
+    let hasStarted = false;
+    let audioCtx = null;
+    let audioEnhanced = false;
+
+    function initAudioEnhancer() {
+      if (audioEnhanced) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        audioCtx = new AudioCtx();
+        const source = audioCtx.createMediaElementSource(bgSong);
+
+        const lowShelf = audioCtx.createBiquadFilter();
+        lowShelf.type = "lowshelf";
+        lowShelf.frequency.value = 110;
+        lowShelf.gain.value = 3.5;
+
+        const vocalBoost = audioCtx.createBiquadFilter();
+        vocalBoost.type = "peaking";
+        vocalBoost.frequency.value = 3000;
+        vocalBoost.Q.value = 0.9;
+        vocalBoost.gain.value = 2.2;
+
+        const highShelf = audioCtx.createBiquadFilter();
+        highShelf.type = "highshelf";
+        highShelf.frequency.value = 8500;
+        highShelf.gain.value = 2.8;
+
+        const compressor = audioCtx.createDynamicsCompressor();
+        compressor.threshold.value = -18;
+        compressor.knee.value = 12;
+        compressor.ratio.value = 3;
+        compressor.attack.value = 0.005;
+        compressor.release.value = 0.18;
+
+        const makeupGain = audioCtx.createGain();
+        makeupGain.gain.value = 1.15;
+
+        source
+          .connect(lowShelf)
+          .connect(vocalBoost)
+          .connect(highShelf)
+          .connect(compressor)
+          .connect(makeupGain)
+          .connect(audioCtx.destination);
+
+        audioEnhanced = true;
+      } catch (e) {
+        // Fallback smoothly to standard <audio> playback if Web Audio is restricted
+      }
     }
 
-    function updateCenterPhoto() {
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const viewportCenter = vh * 0.5;
-      const enterRange = vh * 0.28;
-      const exitRange = vh * 0.37;
-
-      let closestCard = null;
-      let closestDistance = Infinity;
-      let activeDistance = Infinity;
-
-      for (let i = 0; i < cards.length; i++) {
-        const distance = getCardDistance(cards[i], viewportCenter);
-        if (cards[i] === activeCard) {
-          activeDistance = distance;
+    async function startSongFromCut() {
+      initAudioEnhancer();
+      if (audioCtx && audioCtx.state === "suspended") {
+        await audioCtx.resume().catch(() => {});
+      }
+      if (bgSong.readyState >= 1 && bgSong.currentTime < CUT_START_SEC) {
+        bgSong.currentTime = CUT_START_SEC;
+      }
+      try {
+        await bgSong.play();
+        if (bgSong.currentTime < CUT_START_SEC) {
+          bgSong.currentTime = CUT_START_SEC;
         }
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestCard = cards[i];
+      } catch (err) {
+        // Ignore play errors if audio file is missing
+      }
+    }
+
+    bgSong.addEventListener("loadedmetadata", () => {
+      if (bgSong.currentTime < CUT_START_SEC && bgSong.duration > CUT_START_SEC) {
+        bgSong.currentTime = CUT_START_SEC;
+      }
+    });
+
+    // Loop seamlessly back to 2.0s (skipping first 2 seconds every repeat)
+    bgSong.addEventListener("timeupdate", () => {
+      if (bgSong.duration && bgSong.currentTime >= bgSong.duration - 0.12) {
+        bgSong.currentTime = CUT_START_SEC;
+      }
+    });
+
+    bgSong.addEventListener("ended", () => {
+      if (hasStarted) {
+        bgSong.currentTime = CUT_START_SEC;
+        bgSong.play().catch(() => {});
+      }
+    });
+
+    // GPU-Composited Sub-Pixel Auto-Scroll + Smooth Manual Touch/Wheel Loop
+    const viewport = document.getElementById("viewport");
+    const scrollStage = document.getElementById("scrollStage");
+    const backToTopBtn = document.getElementById("backToTopBtn");
+
+    const SCROLL_SPEED_PX_PER_SEC = 40;
+    const BOTTOM_PAUSE_MS = 1400;
+    const TOP_PAUSE_MS = 700;
+    const RETURN_DURATION_MS = 1000;
+    const USER_IDLE_RESUME_MS = 1600;
+
+    let maxScroll = 0;
+    let virtualY = 0;
+    let renderedY = -1;
+    let lastFrameTime = null;
+    let smoothedDt = 1 / 60;
+
+    let mode = "waiting";
+    let modeStartTime = performance.now();
+    let returnStartY = 0;
+    let resumeTimer = null;
+
+    let lastTouchY = 0;
+    let lastTouchTime = 0;
+    let velocity = 0;
+
+    function clamp(val, min, max) {
+      return val < min ? min : val > max ? max : val;
+    }
+
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function updateBounds() {
+      maxScroll = Math.max(0, scrollStage.scrollHeight - viewport.clientHeight);
+      virtualY = clamp(virtualY, 0, maxScroll);
+    }
+
+    function scheduleAutoResume() {
+      clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => {
+        if (hasStarted && mode === "user-paused") {
+          mode = virtualY >= maxScroll - 1 ? "bottom-pause" : "scrolling";
+          modeStartTime = performance.now();
+        }
+      }, USER_IDLE_RESUME_MS);
+    }
+
+    // Play Button Click: Start Song (from 2s), Reveal Page, Begin Auto-Scroll
+    introPlayBtn.addEventListener("click", () => {
+      if (hasStarted) return;
+      hasStarted = true;
+      startSongFromCut();
+      introOverlay.classList.add("is-hidden");
+      setTimeout(() => {
+        introOverlay.style.display = "none";
+      }, 600);
+      mode = "top-pause";
+      modeStartTime = performance.now();
+    });
+
+    viewport.addEventListener("touchstart", (e) => {
+      if (!hasStarted || e.touches.length !== 1) return;
+      clearTimeout(resumeTimer);
+      mode = "dragging";
+      velocity = 0;
+      lastTouchY = e.touches[0].clientY;
+      lastTouchTime = performance.now();
+    }, { passive: true });
+
+    viewport.addEventListener("touchmove", (e) => {
+      if (!hasStarted || mode !== "dragging" || e.touches.length !== 1) return;
+      const y = e.touches[0].clientY;
+      const now = performance.now();
+      const dy = lastTouchY - y;
+      const dtMs = Math.max(1, now - lastTouchTime);
+
+      virtualY = clamp(virtualY + dy, 0, maxScroll);
+      const instVel = (dy / dtMs) * 1000;
+      velocity = velocity * 0.4 + instVel * 0.6;
+
+      lastTouchY = y;
+      lastTouchTime = now;
+    }, { passive: true });
+
+    function onTouchEnd() {
+      if (!hasStarted || mode !== "dragging") return;
+      if (performance.now() - lastTouchTime > 80) {
+        velocity = 0;
+      }
+      if (Math.abs(velocity) > 35) {
+        mode = "inertia";
+      } else {
+        velocity = 0;
+        mode = "user-paused";
+        scheduleAutoResume();
+      }
+    }
+
+    viewport.addEventListener("touchend", onTouchEnd, { passive: true });
+    viewport.addEventListener("touchcancel", onTouchEnd, { passive: true });
+
+    viewport.addEventListener("wheel", (e) => {
+      if (!hasStarted) return;
+      e.preventDefault();
+      clearTimeout(resumeTimer);
+      velocity = 0;
+      const multiplier = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? viewport.clientHeight : 1;
+      virtualY = clamp(virtualY + e.deltaY * multiplier, 0, maxScroll);
+      mode = "user-paused";
+      scheduleAutoResume();
+    }, { passive: false });
+
+    window.addEventListener("keydown", (e) => {
+      if (!hasStarted) return;
+      let step = 0;
+      if (e.key === "ArrowDown") step = 60;
+      else if (e.key === "ArrowUp") step = -60;
+      else if (e.key === "PageDown" || e.key === " ") step = viewport.clientHeight * 0.75;
+      else if (e.key === "PageUp") step = -viewport.clientHeight * 0.75;
+      else return;
+
+      e.preventDefault();
+      clearTimeout(resumeTimer);
+      velocity = 0;
+      virtualY = clamp(virtualY + step, 0, maxScroll);
+      mode = "user-paused";
+      scheduleAutoResume();
+    });
+
+    backToTopBtn.addEventListener("click", (e) => {
+      if (!hasStarted) return;
+      e.stopPropagation();
+      clearTimeout(resumeTimer);
+      velocity = 0;
+      returnStartY = virtualY;
+      mode = "returning";
+      modeStartTime = performance.now();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        lastFrameTime = null;
+      }
+    });
+
+    window.addEventListener("resize", updateBounds, { passive: true });
+    window.addEventListener("load", updateBounds);
+    updateBounds();
+
+    function renderLoop(now) {
+      if (lastFrameTime === null) {
+        lastFrameTime = now;
+      }
+
+      const rawDt = (now - lastFrameTime) / 1000;
+      lastFrameTime = now;
+
+      if (rawDt > 0.002 && rawDt < 0.04) {
+        smoothedDt = smoothedDt * 0.85 + rawDt * 0.15;
+      }
+      const dt = Math.min(0.05, rawDt < 0.04 ? smoothedDt : rawDt);
+
+      if (!document.hidden && hasStarted) {
+        if (mode === "top-pause") {
+          if (now - modeStartTime >= TOP_PAUSE_MS) {
+            mode = "scrolling";
+          }
+        } else if (mode === "scrolling") {
+          virtualY += SCROLL_SPEED_PX_PER_SEC * dt;
+          if (virtualY >= maxScroll) {
+            virtualY = maxScroll;
+            mode = "bottom-pause";
+            modeStartTime = now;
+          }
+        } else if (mode === "bottom-pause") {
+          if (now - modeStartTime >= BOTTOM_PAUSE_MS) {
+            returnStartY = virtualY;
+            mode = "returning";
+            modeStartTime = now;
+          }
+        } else if (mode === "returning") {
+          const progress = Math.min(1, (now - modeStartTime) / RETURN_DURATION_MS);
+          virtualY = returnStartY * (1 - easeInOutCubic(progress));
+          if (progress >= 1) {
+            virtualY = 0;
+            mode = "top-pause";
+            modeStartTime = now;
+          }
+        } else if (mode === "inertia") {
+          virtualY += velocity * dt;
+          velocity *= Math.pow(0.93, dt * 60);
+
+          if (virtualY <= 0) {
+            virtualY = 0;
+            velocity = 0;
+          } else if (virtualY >= maxScroll) {
+            virtualY = maxScroll;
+            velocity = 0;
+          }
+
+          if (Math.abs(velocity) < 12) {
+            velocity = 0;
+            mode = "user-paused";
+            scheduleAutoResume();
+          }
+        }
+
+        if (Math.abs(virtualY - renderedY) > 0.001) {
+          renderedY = virtualY;
+          scrollStage.style.transform = `translate3d(0, ${(-renderedY).toFixed(3)}px, 0)`;
         }
       }
 
-      let nextActive = activeCard;
-
-      if (closestDistance <= enterRange) {
-        nextActive = closestCard;
-      } else if (activeCard && activeDistance > exitRange) {
-        nextActive = null;
-      }
-
-      if (nextActive !== activeCard) {
-        if (activeCard) activeCard.classList.remove("is-active");
-        if (nextActive) nextActive.classList.add("is-active");
-        activeCard = nextActive;
-      }
-
-      ticking = false;
+      requestAnimationFrame(renderLoop);
     }
 
-    function onScroll() {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(updateCenterPhoto);
-      }
-    }
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    window.addEventListener("pageshow", updateCenterPhoto);
-    window.addEventListener("load", updateCenterPhoto);
-    updateCenterPhoto();
+    requestAnimationFrame(renderLoop);
   </script>
 
 </body>
