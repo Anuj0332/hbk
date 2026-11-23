@@ -16,27 +16,18 @@
 
     html {
       scroll-behavior: smooth;
-      background-color: #000000;
       overflow-x: clip;
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
-      background-color: #000000;
+      min-height: 100dvh;
+      /* 45-degree: bottom-left black to top-right dark pink */
+      background: linear-gradient(45deg, #000000, #4f1833);
+      background-repeat: no-repeat;
       color: #d1d5db;
       overflow-x: clip;
       position: relative;
-    }
-
-    /* Fixed GPU-Cached 45deg Background (prevents mobile URL-bar repaint jitter) */
-    .bg-gradient {
-      position: fixed;
-      inset: 0;
-      z-index: -2;
-      pointer-events: none;
-      background: linear-gradient(45deg, #000000, #4f1833);
-      transform: translateZ(0);
     }
 
     /* Isolated GPU-Composited Floating Hearts Layer */
@@ -373,8 +364,6 @@
   </style>
 </head>
 <body id="top">
-
-  <div class="bg-gradient" aria-hidden="true"></div>
 
   <!-- Shared SVG Gradients for 3D Dark Pink Hearts -->
   <svg width="0" height="0" style="position:absolute; visibility:hidden;" aria-hidden="true">
