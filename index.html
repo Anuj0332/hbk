@@ -16,20 +16,27 @@
 
     html {
       scroll-behavior: smooth;
+      background-color: #000000;
+      overflow-x: clip;
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100dvh;
-      /* 45-degree: bottom-left black to top-right dark pink */
-      background: linear-gradient(45deg, #000000, #4f1833);
-      background-repeat: no-repeat;
+      min-height: 100vh;
+      background-color: #000000;
       color: #d1d5db;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
+      overflow-x: clip;
       position: relative;
+    }
+
+    /* Fixed GPU-Cached 45deg Background (prevents mobile URL-bar repaint jitter) */
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background: linear-gradient(45deg, #000000, #4f1833);
+      transform: translateZ(0);
     }
 
     /* Isolated GPU-Composited Floating Hearts Layer */
@@ -47,12 +54,16 @@
       position: absolute;
       bottom: -70px;
       will-change: transform, opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       animation: floatUp linear infinite;
     }
 
     .heart-svg {
       display: block;
       will-change: transform;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       animation: bobbleSway ease-in-out infinite alternate;
     }
 
@@ -68,7 +79,7 @@
         opacity: var(--max-opacity, 0.78);
       }
       100% {
-        transform: translate3d(0, calc(-100dvh - 110px), 0) scale(1.1);
+        transform: translate3d(0, calc(-100vh - 140px), 0) scale(1.05);
         opacity: 0;
       }
     }
@@ -78,7 +89,7 @@
         transform: translate3d(calc(var(--sway, 16px) * -1), 0, 0) rotate(-8deg) scale(0.95);
       }
       50% {
-        transform: translate3d(0, 0, 0) rotate(0deg) scale(1.04);
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1.02);
       }
       100% {
         transform: translate3d(var(--sway, 16px), 0, 0) rotate(8deg) scale(0.97);
@@ -90,7 +101,7 @@
       position: relative;
       z-index: 1;
       text-align: center;
-      padding: 36px 16px 18px;
+      padding: 36px 16px 10px;
       contain: layout style;
     }
 
@@ -141,7 +152,7 @@
     /* Closing Script Text Before Upward Arrow Button */
     .closing-wrap {
       text-align: center;
-      padding: 8px 8px 0;
+      padding: 12px 8px 0;
       contain: layout style;
     }
 
@@ -159,23 +170,24 @@
       width: 100%;
       max-width: 480px;
       margin: 0 auto;
-      padding: 20px 16px;
+      padding: 12px 16px 24px;
       display: flex;
       flex-direction: column;
-      gap: 48px;
+      gap: 24px;
     }
 
-    /* Smaller Borderless Photo Section Wrapper */
+    /* Layout Wrapper (keeps space stable; max visual size = scale(1) so iOS/Android never re-rasterize) */
     .card {
       position: relative;
-      width: 78%;
-      max-width: 300px;
+      width: 88%;
+      max-width: 344px;
       margin: 0 auto;
+      contain: layout style;
     }
 
-    /* Extra breathing room under the last photo for the pop-up wish text */
+    /* Extra breathing room under the last photo for the wish text */
     .card-last {
-      margin-bottom: 24px;
+      margin-bottom: 42px;
     }
 
     /* Alternating subtle tilt directions */
@@ -187,32 +199,41 @@
       --tilt: 2.2deg;
     }
 
-    /* Pre-rendered Pop-Out Shadow Layer (animated via opacity + transform only for 60fps) */
-    .card::before {
+    /* SINGLE GPU-Composited Layer per Card (photo + vignette + glow move in total lockstep) */
+    .card-inner {
+      position: relative;
+      border-radius: 18px;
+      opacity: 0.84;
+      transform: translate3d(0, 0, 0) scale(0.81) rotate(0deg);
+      transform-origin: center center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: transform, opacity;
+      box-shadow:
+        0 12px 22px -6px rgba(0, 0, 0, 0.82),
+        0 4px 10px -2px rgba(0, 0, 0, 0.65);
+      transition:
+        transform 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Pop-Out Glow Layer (opacity-only transition, locked inside .card-inner) */
+    .card-inner::before {
       content: "";
       position: absolute;
       inset: 0;
+      z-index: 0;
       border-radius: 18px;
       pointer-events: none;
       opacity: 0;
-      transform: translate3d(0, 0, 0) scale(0.94) rotate(0deg);
       box-shadow:
-        0 28px 50px -6px rgba(0, 0, 0, 0.96),
-        0 14px 24px -4px rgba(0, 0, 0, 0.86),
-        0 0 32px rgba(196, 56, 124, 0.36);
-      will-change: transform, opacity;
-      transition:
-        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-        opacity 0.4s ease;
+        0 22px 38px -8px rgba(0, 0, 0, 0.92),
+        0 0 26px rgba(196, 56, 124, 0.36);
+      transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .card.is-active::before {
-      opacity: 1;
-      transform: translate3d(0, -10px, 0) scale(1.06) rotate(var(--tilt, -2.2deg));
-    }
-
-    /* Smooth Black Border & Corner Vignette Overlay (locked to photo transform for 60fps) */
-    .card::after {
+    /* Smooth Black Border & Corner Vignette Overlay (inherits .card-inner transform for free) */
+    .card-inner::after {
       content: "";
       position: absolute;
       inset: 0;
@@ -226,20 +247,19 @@
         rgba(0, 0, 0, 0.8) 100%
       );
       box-shadow: inset 0 0 26px 6px rgba(0, 0, 0, 0.72);
-      opacity: 0.84;
-      transform: translate3d(0, 0, 0) scale(0.94) rotate(0deg);
-      will-change: transform, opacity;
-      transition:
-        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-        opacity 0.4s ease;
     }
 
-    .card.is-active::after {
+    /* Active Centered State: pops smoothly to crisp 1:1 scale(1) */
+    .card.is-active .card-inner {
       opacity: 1;
-      transform: translate3d(0, -10px, 0) scale(1.06) rotate(var(--tilt, -2.2deg));
+      transform: translate3d(0, -14px, 0) scale(1) rotate(var(--tilt, -2.2deg));
     }
 
-    /* Vertical Portrait Photo (static resting shadow + transform/opacity transitions only) */
+    .card.is-active .card-inner::before {
+      opacity: 1;
+    }
+
+    /* Vertical Portrait Photo */
     .section-photo {
       position: relative;
       z-index: 1;
@@ -251,30 +271,16 @@
       border-radius: 18px;
       border: none;
       background: linear-gradient(145deg, #2a0a1a, #12040b);
-      opacity: 0.84;
-      transform: translate3d(0, 0, 0) scale(0.94) rotate(0deg);
-      box-shadow:
-        0 14px 26px -6px rgba(0, 0, 0, 0.85),
-        0 6px 12px -4px rgba(0, 0, 0, 0.72),
-        0 0 14px rgba(156, 41, 97, 0.16);
-      will-change: transform, opacity;
-      transition:
-        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-        opacity 0.4s ease;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
-    /* Pop-Notification & Pop-Out Tilt When Photo Hits Center of Screen */
-    .card.is-active .section-photo {
-      opacity: 1;
-      transform: translate3d(0, -10px, 0) scale(1.06) rotate(var(--tilt, -2.2deg));
-    }
-
-    /* Smaller, 1.5x Darker Pop-Up Text Near Last Photo (disappears when last photo leaves) */
+    /* Smaller, 1.5x Darker Pop-Up Text Near Last Photo */
     .pop-wish {
       position: absolute;
-      left: -12%;
-      right: -12%;
-      top: calc(100% + 14px);
+      left: -6%;
+      right: -6%;
+      top: calc(100% + 4px);
       z-index: 3;
       text-align: center;
       pointer-events: none;
@@ -282,11 +288,13 @@
       line-height: 1.25;
       padding: 0 8px;
       opacity: 0;
-      transform: translate3d(0, 12px, 0) scale(0.86);
+      transform: translate3d(0, 14px, 0) scale(0.92);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       will-change: transform, opacity;
       transition:
-        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-        opacity 0.32s ease;
+        transform 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .card-last.is-active .pop-wish {
@@ -301,7 +309,7 @@
       justify-content: center;
       width: 46px;
       height: 46px;
-      margin: -16px auto 0;
+      margin: 4px auto 0;
       border-radius: 50%;
       background: rgba(12, 4, 8, 0.88);
       border: 1px solid rgba(245, 194, 220, 0.28);
@@ -322,8 +330,8 @@
     /* Small Normal Pink Footer Signature + Realistic Pumping Heart */
     .footer-note {
       text-align: center;
-      padding: 0 12px 28px;
-      margin-top: -16px;
+      padding: 0 12px 24px;
+      margin-top: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 0.85rem;
       font-weight: 400;
@@ -348,22 +356,25 @@
       height: 26px;
       flex-shrink: 0;
       will-change: transform;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       transform-origin: center center;
       animation: realHeartPump 1.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
-      filter: drop-shadow(0 2px 6px rgba(190, 24, 93, 0.45));
     }
 
     @keyframes realHeartPump {
-      0%   { transform: translate3d(0, 0, 0) scale(1); }
-      14%  { transform: translate3d(0, 0, 0) scale(1.22); }
-      26%  { transform: translate3d(0, 0, 0) scale(1.03); }
-      38%  { transform: translate3d(0, 0, 0) scale(1.16); }
-      65%  { transform: translate3d(0, 0, 0) scale(1); }
-      100% { transform: translate3d(0, 0, 0) scale(1); }
+      0%   { transform: translate3d(0, 0, 0) scale(0.86); }
+      14%  { transform: translate3d(0, 0, 0) scale(1.04); }
+      26%  { transform: translate3d(0, 0, 0) scale(0.89); }
+      38%  { transform: translate3d(0, 0, 0) scale(1); }
+      65%  { transform: translate3d(0, 0, 0) scale(0.86); }
+      100% { transform: translate3d(0, 0, 0) scale(0.86); }
     }
   </style>
 </head>
 <body id="top">
+
+  <div class="bg-gradient" aria-hidden="true"></div>
 
   <!-- Shared SVG Gradients for 3D Dark Pink Hearts -->
   <svg width="0" height="0" style="position:absolute; visibility:hidden;" aria-hidden="true">
@@ -401,23 +412,33 @@
 
   <main class="container">
     <section class="card">
-      <img src="photo1.jpg" alt="Khushi 1" class="section-photo" decoding="async" />
+      <div class="card-inner">
+        <img src="photo1.jpg" alt="Khushi 1" class="section-photo" decoding="async" />
+      </div>
     </section>
 
     <section class="card">
-      <img src="photo2.jpg" alt="Khushi 2" class="section-photo" decoding="async" />
+      <div class="card-inner">
+        <img src="photo2.jpg" alt="Khushi 2" class="section-photo" decoding="async" />
+      </div>
     </section>
 
     <section class="card">
-      <img src="photo3.jpg" alt="Khushi 3" class="section-photo" decoding="async" />
+      <div class="card-inner">
+        <img src="photo3.jpg" alt="Khushi 3" class="section-photo" decoding="async" />
+      </div>
     </section>
 
     <section class="card">
-      <img src="photo4.jpg" alt="Khushi 4" class="section-photo" decoding="async" />
+      <div class="card-inner">
+        <img src="photo4.jpg" alt="Khushi 4" class="section-photo" decoding="async" />
+      </div>
     </section>
 
     <section class="card card-last">
-      <img src="photo5.jpg" alt="Khushi 5" class="section-photo" decoding="async" />
+      <div class="card-inner">
+        <img src="photo5.jpg" alt="Khushi 5" class="section-photo" decoding="async" />
+      </div>
       <p class="pop-wish script-gradient-darker">Congratulations ! You Turned to 18 Years Today.</p>
     </section>
 
@@ -480,10 +501,10 @@
   </main>
 
   <script>
-    // Batch-insert 14 GPU-composited 3D dark pink hearts
+    // Batch-insert 12 GPU-composited 3D dark pink hearts
     const heartsLayer = document.getElementById("heartsLayer");
     const heartFragment = document.createDocumentFragment();
-    const heartCount = 14;
+    const heartCount = 12;
 
     for (let i = 0; i < heartCount; i++) {
       const wrap = document.createElement("div");
@@ -522,34 +543,52 @@
 
     heartsLayer.appendChild(heartFragment);
 
-    // 60fps center-screen pop notification & tilt controller
+    // Pre-decode images into GPU memory so first-time scroll pops never stutter
+    document.querySelectorAll(".section-photo").forEach((img) => {
+      if (img.decode) {
+        img.decode().catch(() => {});
+      }
+    });
+
+    // Smooth mobile-ready center-screen pop controller with hysteresis
     const cards = Array.from(document.querySelectorAll(".card"));
-    let viewportCenter = window.innerHeight * 0.5;
-    let triggerRange = window.innerHeight * 0.34;
     let activeCard = null;
     let ticking = false;
 
-    function updateMetrics() {
-      viewportCenter = window.innerHeight * 0.5;
-      triggerRange = window.innerHeight * 0.34;
+    function getCardDistance(card, viewportCenter) {
+      const rect = card.getBoundingClientRect();
+      const cardCenter = rect.top + rect.height * 0.5;
+      return Math.abs(cardCenter - viewportCenter);
     }
 
     function updateCenterPhoto() {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const viewportCenter = vh * 0.5;
+      const enterRange = vh * 0.28;
+      const exitRange = vh * 0.37;
+
       let closestCard = null;
       let closestDistance = Infinity;
+      let activeDistance = Infinity;
 
       for (let i = 0; i < cards.length; i++) {
-        const rect = cards[i].getBoundingClientRect();
-        const cardCenter = rect.top + rect.height * 0.5;
-        const distance = Math.abs(cardCenter - viewportCenter);
-
+        const distance = getCardDistance(cards[i], viewportCenter);
+        if (cards[i] === activeCard) {
+          activeDistance = distance;
+        }
         if (distance < closestDistance) {
           closestDistance = distance;
           closestCard = cards[i];
         }
       }
 
-      const nextActive = closestDistance <= triggerRange ? closestCard : null;
+      let nextActive = activeCard;
+
+      if (closestDistance <= enterRange) {
+        nextActive = closestCard;
+      } else if (activeCard && activeDistance > exitRange) {
+        nextActive = null;
+      }
 
       if (nextActive !== activeCard) {
         if (activeCard) activeCard.classList.remove("is-active");
@@ -562,18 +601,14 @@
 
     function onScroll() {
       if (!ticking) {
-        requestAnimationFrame(updateCenterPhoto);
         ticking = true;
+        requestAnimationFrame(updateCenterPhoto);
       }
     }
 
-    function onResize() {
-      updateMetrics();
-      onScroll();
-    }
-
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    window.addEventListener("pageshow", updateCenterPhoto);
     window.addEventListener("load", updateCenterPhoto);
     updateCenterPhoto();
   </script>
